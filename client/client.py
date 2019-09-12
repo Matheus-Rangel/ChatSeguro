@@ -7,18 +7,19 @@ from .chat_net
 def encrypt(msg, key):
     return msg
 
-def handshake(sock, nick, chat_id, key):
-    msg = {"nick": nick, "chat_id": chat_id, "key": key}
-    msg = json()
-    sock.send(msg)
-
+def register(sock, nick, chat_id, key):
+    msg = {"nick": nick, "chat_id": chat_id, "key": key, "action": "REGISTER"}
+    msg = json.dumps(msg).encode()
+    msg = encrypto(msg, key)
+    response = sock.send(msg)
+    return response
+    
 def start(server, port, chat_id, key):
     sock = ClientSocket()
     sock.connect(server, port)
-    status = sock.handshake(chat_id, key)
+    status = register(sock, nick, chat_id, key)
     if status == Status.OK:
-        print("AND THE GAME BEGINS")
-        PRINT()
+        print("AND THE CHAT BEGINS")
         pass
     elif status == Status.UNAUTHORIZED:
         print("YOU SHALL NOT PASS!!!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -27,10 +28,9 @@ def start(server, port, chat_id, key):
         print("YOU ARE LOST YOUR FOUL")
         return
 
-
 if __name__ == "__main__":
     server = sys.argv[1]
     port = int(sys.argv[2])
     chat_id = sys.argv[3]
     key = sys.argv[4]
-    curses.wrapper(start())
+    curses.wrapper(start)
