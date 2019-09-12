@@ -1,7 +1,5 @@
-
-
 from functools import reduce
-def permutation(value, p_type):
+def permutation(bit_array, p_type):
     if(p_type == "init"):
         ip = [2, 6, 3, 1, 4 ,8 ,5, 7]
     elif(p_type == "inv_init"):
@@ -10,18 +8,26 @@ def permutation(value, p_type):
         ip = [3, 5, 2, 7, 4, 10, 1, 9, 8, 6]
     elif(p_type == "p8"):
         ip = [6, 3, 7, 4, 8 , 5, 10, 9]
+    elif(p_type == "p4"):
+        ip = [2,4,3,1]
+    elif(p_type == "ep"):
+        ip = [4,1,2,3,4,2,3,4,1]
     
-    bit_array = [0 for i in range(len(ip))]
-    power = 2**(len(ip) - 1)
-    for i in ip:
-        bit_array[i-1] = (value & power)//power
-        value <<= 1
-    # r = 0
-    # for i, bit in enumerate(bit_array[::-1]):
-    #     r += bit*2**i
-    return bit_array
+    result_bit_array = [0 for i in range(len(ip))]
+    for index,value in enumerate(ip):
+        result_bit_array[index] = bit_array[value-1]
+    return result_bit_array
+
 def sw(bit_array):
-    return bit_array[4:8] + bit_array[:4]
+    return ls1(bit_array[4:8]) + ls1(bit_array[:4])
+
+def ls1(bit_array):
+    new_bit_array = bit_array
+    
+    for index,value in enumerate(bit_array):
+        new_bit_array[index-1] = bit_array[index] 
+
+    return new_bit_array
 
 def s_box(bit_array, box_type):
     if(box_type == "s0"):
@@ -48,15 +54,58 @@ def value_bit_array(value):
         bit_array = [value%2] + bit_array
         value >>= 1
     return bit_array
-def fk():
-    pass
-def cipher():
-    pass
-def decipher():
-    pass
+
+def bit_array_value(bit_array):
+    byte = ""
+
+    for i in bit_array:
+        if i == 1:
+            byte += '1'
+        else:
+            byte += '0'
+
+    return int(byte,2)
+
+def fk(bit_array,key):
+    left = bit_array[:3]
+    right = bit_array[4:]
+    
+    ep = permutation(right,"ep")
+    xor = ep ^ key
+
+    s0 = s_box(xor[:3],"s0")
+    s1 = s_box(xor[4:],"s1")
+    p4 = permutation(s0 + s1,"p4")
+    
+    return (left ^ p4)
+
+def cipher(value,key):
+    bit_array = value_bit_array(value)
+    perm = permutation(bit_array,"init")
+
+    k1 = permutation(sw(permutation(key,"p10"),"p8"))  
+    k2 = permutation(sw(sw(permutation(key,"p10")),"p8"))
+
+    return permutation(fk(sw(fk(perm,key)),k2),"inv_init")
+
+def decipher(value,key):
+    ip = permutation(value,"init")
+    k1 = permutation(sw(permutation(key,"p10"),"p8"))  
+    k2 = permutation(sw(sw(permutation(key,"p10")),"p8"))
+    
+    return permutation(fk(sw(fk(ip,k2)),k1),"inv_init")
+
 if __name__ == "__main__":
-    for i in range(256):
-        init = permutation(i, "init")
-        print("#######")
-        print(init)
-        print(sw(init))
+
+    print(1022)
+    print(cipher(1022,1024))
+    print(decipher(cipher(1022)),1024)
+    #print(permutation(1022,"p10"))
+    #print(permutation(1022,"p8"))
+    #print(bit_array_value(value_bit_array(1022)))
+    #for i in range(256):
+    #    init = permutation(i, "init")
+    #    print("#######")
+    #    print(init)
+    #    print(sw(init))
+    #    print("#######")
