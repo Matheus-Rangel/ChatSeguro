@@ -1,4 +1,6 @@
 from functools import reduce
+from math import log2
+
 def permutation(bit_array, p_type):
     if(p_type == "init"):
         ip = [2, 6, 3, 1, 4 ,8 ,5, 7]
@@ -49,13 +51,21 @@ def s_box(bit_array, box_type):
       return_val = [0] + return_val 
     return return_val; 
 
-def value_bit_array(value):
-    bit_array = []
+def value_bit_array(value,array_size=8):
+
+    if(int(log2(value)) >= array_size):
+      raise ValueError("Input size in bits is bigger than expected, \
+                       make sure that the second argument is bigger than log2(first_arg)") 
+
+    bit_array = [0 for i in range(array_size)]
+    array_index = -1
     if (value == 0):
       return [0]
     while(value != 0):
-        bit_array = [value%2] + bit_array
-        value >>= 1
+      bit_array[array_index] = value % 2
+      array_index -= 1
+    #    bit_array[] = [value%2] + bit_array
+      value >>= 1
     return bit_array
 
 def bit_array_value(bit_array):
@@ -72,7 +82,6 @@ def bit_array_value(bit_array):
 def fk(bit_array,key):
     left = bit_array[:4]
     right = bit_array[4:]
-    
     ep = permutation(right,"ep")
     xor = [a ^ b for a,b in zip(ep,key)]
 
@@ -84,7 +93,7 @@ def fk(bit_array,key):
 
 def cipher(value,key):
     bit_array = value_bit_array(value)
-    chave = value_bit_array(key)
+    chave = value_bit_array(key,10)
     perm = permutation(bit_array,"init")
 
     k1 = permutation(sw(permutation(chave,"p10")),"p8")  
@@ -96,7 +105,7 @@ def cipher(value,key):
 
 def decipher(value,key):
     bit_array = value_bit_array(value)
-    chave = value_bit_array(key)
+    chave = value_bit_array(key,10)
     perm = permutation(bit_array,"init")
 
     k1 = permutation(sw(permutation(chave,"p10")),"p8")  
@@ -106,6 +115,6 @@ def decipher(value,key):
 
 if __name__ == "__main__":
 
-    print(254)
-    print(cipher(254,1024))
-    print(decipher(cipher(254,1024),1024))
+    print(60)
+    print(cipher(60,1023))
+    print(decipher(cipher(60,1023),1023))
