@@ -1,6 +1,5 @@
 from functools import reduce
 from math import log2
-
 def permutation(bit_array, p_type):
     if(p_type == "init"):
         ip = [2, 6, 3, 1, 4 ,8 ,5, 7]
@@ -101,7 +100,7 @@ def cipher(value,key):
     firstFk = fk(perm,k1)
     firstSw = sw(firstFk)
     secondFk = fk(firstSw,k2)
-    return bit_array_value(permutation(secondFk,"inv_init"))
+    return bytearray([(bit_array_value(permutation(secondFk,"inv_init")))])
 
 def decipher(value,key):
     bit_array = value_bit_array(value)
@@ -111,7 +110,7 @@ def decipher(value,key):
     k1 = permutation(sw(permutation(chave,"p10")),"p8")  
     k2 = permutation(sw(sw(permutation(chave,"p10"))), "p8")
 
-    return bit_array_value(permutation(fk(sw(fk(perm,k2)),k1),"inv_init"))
+    return bytearray([(bit_array_value(permutation(fk(sw(fk(perm,k2)),k1),"inv_init")))])
 
 if __name__ == "__main__":
 

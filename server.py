@@ -1,11 +1,11 @@
 import socket
 import select
-
+from crypto import s_des
 HEADER_LENGTH = 10
 
-IP = "127.0.0.1"
+IP = "0.0.0.0"
 PORT = 1234
-
+key = int(input("Chave SDES > "))
 # Create a socket
 # socket.AF_INET - address family, IPv4, some otehr possible are AF_INET6, AF_BLUETOOTH, AF_UNIX
 # socket.SOCK_STREAM - TCP, conection-based, socket.SOCK_DGRAM - UDP, connectionless, datagrams, socket.SOCK_RAW - raw IP packets
@@ -42,13 +42,17 @@ def receive_message(client_socket):
         # If we received no data, client gracefully closed a connection, for example using socket.close() or socket.shutdown(socket.SHUT_RDWR)
         if not len(message_header):
             return False
-
+        decifred_header = bytearray()
+        for b in message_header:
+            decifred_header += s_des.decipher(b, key)
         # Convert header to int value
-        message_length = int(message_header.decode('utf-8').strip())
-
+        message_length = int(decifred_header.decode('utf-8').strip())
         # Return an object of message header and message data
-        return {'header': message_header, 'data': client_socket.recv(message_length)}
-
+        data = client_socket.recv(message_length)
+        decifred_data = bytearray()
+        for b in data:
+            decifred_data += s_des.decipher(b, key)
+        return {'header': message_header, 'data': decifred_data}
     except:
 
         # If we are here, client closed connection violently, for example by pressing ctrl+c on his script
@@ -106,7 +110,6 @@ while True:
             # If False, client disconnected, cleanup
             if message is False:
                 print('Closed connection from: {}'.format(clients[notified_socket]['data'].decode('utf-8')))
-
                 # Remove from list for socket.socket()
                 sockets_list.remove(notified_socket)
 
@@ -128,7 +131,11 @@ while True:
 
                     # Send user and message (both with their headers)
                     # We are reusing here message header sent by sender, and saved username header send by user when he connected
-                    client_socket.send(user['header'] + user['data'] + message['header'] + message['data'])
+                    message = user['header'] + user['data'] + message['header'] + message['data']
+                    cipher_message = bytearray()
+                    for b in message:
+                        cipher_message += s_des.cipher(b, key)
+                    client_socket.send(cipher_message)
 
     # It's not really necessary to have this, but will handle some socket exceptions just in case
     for notified_socket in exception_sockets:
