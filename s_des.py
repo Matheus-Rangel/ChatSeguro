@@ -53,9 +53,9 @@ def s_box(bit_array, box_type):
 
 def value_bit_array(value,array_size=8):
 
-    if(int(log2(value)) >= array_size):
-      raise ValueError("Input size in bits is bigger than expected, \
-                       make sure that the second argument is bigger than log2(first_arg)") 
+    #if(int(log2(value)) >= array_size):
+    #  raise ValueError("Input size in bits is bigger than expected, \
+    #                   make sure that the second argument is bigger than log2(first_arg)") 
 
     bit_array = [0 for i in range(array_size)]
     array_index = -1
