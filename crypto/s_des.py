@@ -48,7 +48,7 @@ def s_box(bit_array, box_type):
     return_val = value_bit_array(boxValue) 
     if(len(return_val) == 1):
       return_val = [0] + return_val 
-    return return_val; 
+    return return_val
 
 def value_bit_array(value,array_size=8):
 
@@ -116,12 +116,12 @@ def cipher_text(text, key):
     resultado = bytearray()
     for c in text:
         resultado += cipher(c, key)
-    return resultado;
+    return resultado
 def decipher_text(text, key):
     resultado = bytearray()
     for c in text:
         resultado += decipher(c, key)
-    return resultado;
+    return resultado
     
 if __name__ == "__main__":
 
