@@ -1,17 +1,12 @@
-def run_rc4(text,key):
+def rc4(text,key):
+    S = KSA(key)
     resultado = []
+    generatedByte = GenFluxo(S)
+
     for char in text:
-        resultado.append(rc4(char,key))
+        resultado.append(char ^ next(generatedByte))
     
     return bytearray(resultado)
-
-
-
-def rc4(value,key):
-  SJ = KSA(key)
-  generatedByte = GenFluxo(SJ[0])
-  return value ^ next(generatedByte)
-
 
 def KSA(key):
     S = []
@@ -26,7 +21,7 @@ def KSA(key):
         j = (j + S[i] + T[i]) % 256
         swap(S,i,j)
 
-    return (S,T)
+    return S
 
 
 def GenFluxo(S):
