@@ -112,6 +112,17 @@ def decipher(value,key):
 
     return bytearray([(bit_array_value(permutation(fk(sw(fk(perm,k2)),k1),"inv_init")))])
 
+def cipher_text(text, key):
+    resultado = bytearray()
+    for c in text:
+        resultado += cipher(c, key)
+    return resultado;
+def decipher_text(text, key):
+    resultado = bytearray()
+    for c in text:
+        resultado += decipher(c, key)
+    return resultado;
+    
 if __name__ == "__main__":
 
     print(60)

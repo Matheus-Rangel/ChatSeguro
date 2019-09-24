@@ -42,16 +42,13 @@ def receive_message(client_socket):
         # If we received no data, client gracefully closed a connection, for example using socket.close() or socket.shutdown(socket.SHUT_RDWR)
         if not len(message_header):
             return False
-        decifred_header = bytearray()
-        for b in message_header:
-            decifred_header += s_des.decipher(b, key)
+        
+        decifred_header = s_des.decipher_text(message_header, key)
         # Convert header to int value
         message_length = int(decifred_header.decode('utf-8').strip())
         # Return an object of message header and message data
         data = client_socket.recv(message_length)
-        decifred_data = bytearray()
-        for b in data:
-            decifred_data += s_des.decipher(b, key)
+        decifred_data = s_des.decipher_text(data, key)
         return {'header': message_header, 'data': decifred_data}
     except:
 
@@ -132,9 +129,7 @@ while True:
                     # Send user and message (both with their headers)
                     # We are reusing here message header sent by sender, and saved username header send by user when he connected
                     message = user['header'] + user['data'] + message['header'] + message['data']
-                    cipher_message = bytearray()
-                    for b in message:
-                        cipher_message += s_des.cipher(b, key)
+                    cipher_message = s_des.cipher_text(message, key)
                     client_socket.send(cipher_message)
 
     # It's not really necessary to have this, but will handle some socket exceptions just in case
