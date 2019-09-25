@@ -1,6 +1,4 @@
 import random
-from math import pow
-
 
 class Dhell():
     def __init__(self, prime=193, fi=5):
