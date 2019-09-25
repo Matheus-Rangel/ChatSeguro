@@ -6,7 +6,6 @@ HEADER_LENGTH = 10
 
 IP = "0.0.0.0"
 PORT = 1234
-key = int(input("Chave SDES > "))
 # Create a socket
 # socket.AF_INET - address family, IPv4, some otehr possible are AF_INET6, AF_BLUETOOTH, AF_UNIX
 # socket.SOCK_STREAM - TCP, conection-based, socket.SOCK_DGRAM - UDP, connectionless, datagrams, socket.SOCK_RAW - raw IP packets
@@ -43,13 +42,16 @@ def receive_message(client_socket):
         # If we received no data, client gracefully closed a connection, for example using socket.close() or socket.shutdown(socket.SHUT_RDWR)
         if not len(message_header):
             return False
-        
-        decifred_header = s_des.decipher_text(message_header, key)
+        try:
+            u = clients[client_socket]
+            decifred_header = s_des.decipher_text(message_header, u['privateKey'])
+        except KeyError:
+            decifred_header = message_header
         # Convert header to int value
         message_length = int(decifred_header.decode('utf-8').strip())
         # Return an object of message header and message data
         data = client_socket.recv(message_length)
-        return {'header': message_header, 'data': data}
+        return {'header': message_length, 'data': data}
     except:
 
         # If we are here, client closed connection violently, for example by pressing ctrl+c on his script
@@ -85,22 +87,24 @@ while True:
 
             # Client should send his name right away, receive it
             message = receive_message(client_socket)
-            user = json.loads(message['data'])
+            if message is False:
+                continue
+            user = json.loads(message['data'], encoding='utf-8')
             # If False - client disconnected before he sent his name
             hellman = d_hell.Dhell()
-            if user is False:
-                continue
+
             user['privateKey'] = hellman.generate_key(user['publicKey'])
+            print(user['privateKey'])
             # Add accepted socket to select.select() list
             sockets_list.append(client_socket)
             message = json.dumps({'publicKey': hellman.public_key}).encode('utf-8')
             header = f"{len(message):<{HEADER_LENGTH}}".encode('utf-8')
             user['header'] = f"{len(user['username']):<{HEADER_LENGTH}}".encode('utf-8')
             message = header + message
-            notified_socket.send(message)
+            client_socket.send(message)
             # Also save username and username header
             clients[client_socket] = user
-            print('Accepted new connection from {}:{}, username: {}'.format(*client_address, user['username'].decode('utf-8')))
+            print('Accepted new connection from {}:{}, username: {}'.format(*client_address, user['username']))
         # Else existing socket is sending a message
         else:
             # Receive message
@@ -108,7 +112,7 @@ while True:
 
             # If False, client disconnected, cleanup
             if message is False:
-                print('Closed connection from: {}'.format(clients[notified_socket]['data'].decode('utf-8')))
+                print('Closed connection from: {}'.format(clients[notified_socket]['username']))
                 # Remove from list for socket.socket()
                 sockets_list.remove(notified_socket)
 
@@ -116,22 +120,23 @@ while True:
                 del clients[notified_socket]
 
                 continue
-
             # Get user by notified socket, so we will know who sent the message
             user = clients[notified_socket]
-
-            print(f'Received message from {user["data"].decode("utf-8")}: {message["data"].decode("utf-8")}')
+            message = message['data']
+            message = s_des.decipher_text(message, user['privateKey'])
+            print(f'Received message from {user["username"]}: {message}')
 
             # Iterate over connected clients and broadcast message
             for client_socket in clients:
 
                 # But don't sent it to sender
                 if client_socket != notified_socket:
-
+                    user_d = clients[client_socket]
                     # Send user and message (both with their headers)
                     # We are reusing here message header sent by sender, and saved username header send by user when he connected
-                    message = user['header'] + user['username'] + message['header'] + message['data']
-                    cipher_message = s_des.cipher_text(message, user['privateKey'])
+                    message_header = f"{len(message):<{HEADER_LENGTH}}".encode('utf-8')
+                    message = user['header'] + user['username'].encode('utf-8') + message_header + message
+                    cipher_message = s_des.cipher_text(message, user_d['privateKey'])
                     client_socket.send(cipher_message)
 
     # It's not really necessary to have this, but will handle some socket exceptions just in case
