@@ -1,5 +1,6 @@
 from functools import reduce
 from math import log2
+
 def permutation(bit_array, p_type):
     if(p_type == "init"):
         ip = [2, 6, 3, 1, 4 ,8 ,5, 7]

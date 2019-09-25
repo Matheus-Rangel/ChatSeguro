@@ -125,7 +125,7 @@ while True:
             message = message['data']
             message = s_des.decipher_text(message, user['privateKey'])
             print(f'Received message from {user["username"]}: {message}')
-
+            message_header = f"{len(message):<{HEADER_LENGTH}}".encode('utf-8')
             # Iterate over connected clients and broadcast message
             for client_socket in clients:
 
@@ -134,9 +134,8 @@ while True:
                     user_d = clients[client_socket]
                     # Send user and message (both with their headers)
                     # We are reusing here message header sent by sender, and saved username header send by user when he connected
-                    message_header = f"{len(message):<{HEADER_LENGTH}}".encode('utf-8')
-                    message = user['header'] + user['username'].encode('utf-8') + message_header + message
-                    cipher_message = s_des.cipher_text(message, user_d['privateKey'])
+                    data = user['header'] + user['username'].encode('utf-8') + message_header + message
+                    cipher_message = s_des.cipher_text(data, user_d['privateKey'])
                     client_socket.send(cipher_message)
 
     # It's not really necessary to have this, but will handle some socket exceptions just in case
